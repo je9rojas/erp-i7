@@ -42,6 +42,13 @@ export default function PurchaseTable() {
 
     // Función para eliminar una compra
     const handleDelete = async (id) => {
+        // Mostrar cuadro de confirmación
+        const confirmDelete = window.confirm('¿Estás seguro de que deseas eliminar esta compra?');
+        if (!confirmDelete) {
+            console.log(`[INFO] Elimination canceled for purchase with id: ${id}`);
+            return; // Salir si el usuario selecciona "No"
+        }
+
         try {
             console.log(`[INFO] Attempting to delete purchase with id: ${id}`);
             const response = await fetch(`http://localhost:3001/purchases/${id}`, {
