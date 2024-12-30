@@ -9,11 +9,19 @@ export default function PurchaseTable() {
     useEffect(() => {
         // Función para obtener las compras del backend
         const fetchPurchases = async () => {
-            console.log('[INFO] Fetching purchases from backend...');
-            const response = await fetch('http://localhost:3001/purchases');
-            const data = await response.json();
-            console.log('[INFO] Purchases data fetched:', data);
-            setPurchases(data); // Establecer las compras en el estado
+            try {
+                console.log('[INFO] Fetching purchases from backend...');
+                const response = await fetch('http://localhost:3001/purchases');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('[INFO] Purchases data fetched:', data);
+                    setPurchases(data); // Establecer las compras en el estado
+                } else {
+                    console.error('[ERROR] Failed to fetch purchases. Status:', response.status);
+                }
+            } catch (error) {
+                console.error('[ERROR] Error fetching purchases:', error);
+            }
         };
 
         // Llamar a la función para obtener las compras al cargar el componente
@@ -32,6 +40,26 @@ export default function PurchaseTable() {
         };
     }, [socket]);
 
+    // Función para eliminar una compra
+    const handleDelete = async (id) => {
+        try {
+            console.log(`[INFO] Attempting to delete purchase with id: ${id}`);
+            const response = await fetch(`http://localhost:3001/purchases/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                console.log(`[INFO] Purchase with id: ${id} deleted successfully`);
+                // Actualizar el estado eliminando la compra eliminada
+                setPurchases(purchases.filter(purchase => purchase._id !== id));
+            } else {
+                console.error(`[ERROR] Failed to delete purchase with id: ${id}. Status: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('[ERROR] Error deleting purchase:', error);
+        }
+    };
+
     return (
         <div>
             <table>
@@ -43,6 +71,7 @@ export default function PurchaseTable() {
                         <th>Cantidad</th>
                         <th>Precio</th>
                         <th>Fecha</th>
+                        <th>Acciones</th> {/* Nueva columna para las acciones */}
                     </tr>
                 </thead>
                 <tbody>
@@ -54,6 +83,14 @@ export default function PurchaseTable() {
                             <td>{purchase.quantity}</td>
                             <td>{purchase.price.$numberDecimal}</td>
                             <td>{new Date(purchase.purchaseDate).toLocaleDateString()}</td>
+                            <td>
+                                <button 
+                                    onClick={() => handleDelete(purchase._id)} 
+                                    style={{ color: 'red' }}
+                                >
+                                    Eliminar
+                                </button>
+                            </td> {/* Botón para eliminar la compra */}
                         </tr>
                     ))}
                 </tbody>

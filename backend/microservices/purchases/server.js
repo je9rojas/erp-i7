@@ -27,6 +27,28 @@ app.use('/purchases', (req, res, next) => {
     next();
 }, purchaseRoutes);
 
+// Ruta para eliminar una compra por su ID
+app.delete('/purchases/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log(`[INFO] Attempting to delete purchase with id: ${id}`);
+        
+        const purchase = await Purchase.findByIdAndDelete(id); // Eliminar la compra de la base de datos
+        if (!purchase) {
+            return res.status(404).json({ message: 'Purchase not found' });
+        }
+        
+        console.log(`[INFO] Purchase with id: ${id} deleted successfully`);
+        res.status(200).json({ message: 'Purchase deleted successfully' });
+
+        // Emitir el evento 'purchase-updated' para notificar a los clientes conectados
+        io.emit('purchase-updated');
+    } catch (error) {
+        console.error('[ERROR] Error deleting purchase:', error);
+        res.status(500).json({ message: 'Error deleting purchase' });
+    }
+});
+
 // Conexión a la base de datos MongoDB
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('[INFO] Database connected successfully'))
